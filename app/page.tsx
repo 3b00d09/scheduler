@@ -1,103 +1,129 @@
-import Image from "next/image";
+// app/page.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { generateStudyPlan } from './lib/actions';
+import { getApiKey, saveApiKey, savePlan, checkWeeklyReset } from './lib/utils';
+import { Header } from './components/Header';
+import { StatsCards } from './components/StatsCard';
+import { ApiKeyInput } from './components/ApiKeyInput';
+import { ScheduleInput } from './components/ScheduleInput';
+import { FeaturesList } from './components/FeaturesList';
+
+const EXAMPLE_TEXT = `My weekly nursing university schedule:
+
+CLASSES:
+- Monday: Nursing Fundamentals 9:00-12:00, Anatomy Lab 14:00-17:00
+- Tuesday: Pharmacology lecture 10:00-12:00, Clinical Skills 14:00-17:00  
+- Wednesday: Pathophysiology 9:00-11:00, Patient Care Workshop 13:00-16:00
+- Thursday: FREE DAY (no classes)
+- Friday: Community Health 9:00-12:00, then I have a project presentation at 15:00
+
+WORK (Hotel night shifts):
+- Friday 22:00 to Saturday 06:00
+- Saturday 22:00 to Sunday 06:00
+
+COMMUTE: 
+- Train ride is 45 minutes each way
+- I leave home around 7:30 AM to arrive by 8:30 AM
+
+URGENT DEADLINES:
+- Care plan assignment due Thursday 23:59
+- Pharmacology quiz next Tuesday during class
+- Clinical reflection report due in 10 days
+
+FINAL EXAMS COMING UP:
+- Anatomy: December 15
+- Pharmacology: December 18  
+- Patient Care: December 20
+
+PERSONAL NOTES:
+- I'm completely exhausted after night shifts and need good sleep
+- I wake up around 6:00 AM on class days
+- I prefer studying in the morning when I'm fresh
+- Need time for meals and family
+- Thursday is my power day since no classes!`;
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter();
+  const [apiKey, setApiKey] = useState('');
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    checkWeeklyReset();
+    setApiKey(getApiKey());
+  }, []);
+
+  const handleApiKeyChange = (key: string) => {
+    setApiKey(key);
+    saveApiKey(key);
+  };
+
+  const handleGenerate = async () => {
+    if (!inputText.trim()) {
+      alert('Please enter your schedule information');
+      return;
+    }
+
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+      alert('Please add your OpenAI API key');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await generateStudyPlan(inputText, apiKey);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      savePlan(result.plan);
+      router.push('/result');
+    } catch (error: any) {
+      alert(error.message || 'Failed to generate plan');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-violet-600 flex flex-col items-center justify-center text-white">
+        <div className="w-30 h-30 rounded-full bg-white/20 flex items-center justify-center mb-8">
+          <div className="w-15 h-15 border-4 border-white/30 border-t-white rounded-full animate-spin" />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <h2 className="text-3xl font-black mb-2.5">Creating Your Plan</h2>
+        <p className="text-base opacity-80 font-semibold">
+          AI is analyzing your schedule...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 pb-24">
+      <div className="max-w-4xl mx-auto px-5 py-5">
+        <Header />
+        <StatsCards />
+        <ApiKeyInput value={apiKey} onChange={handleApiKeyChange} />
+        <ScheduleInput
+          value={inputText}
+          onChange={setInputText}
+          onLoadExample={() => setInputText(EXAMPLE_TEXT)}
+        />
+        <FeaturesList />
+        <button
+          onClick={handleGenerate}
+          disabled={isLoading}
+          className="w-full bg-violet-600 text-white rounded-2xl p-5 text-lg font-extrabold shadow-lg shadow-violet-600/40 hover:bg-violet-700 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-600/50 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          ✨ Create My Plan →
+        </button>
+      </div>
     </div>
   );
 }
