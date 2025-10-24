@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+// this import works idk why it says cannot find module, just ignore for now
+import "./globals.css"
+import NavHeader from "./lib/components/NavHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,9 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen p-2`}
       >
-        {children}
+            <div className="min-h-screen bg-background pb-24">
+              <div className="max-w-4xl mx-auto px-5 py-5 grid gap-8">
+                <NavHeader/>
+                {children}
+              </div>
+            </div>
       </body>
     </html>
   );

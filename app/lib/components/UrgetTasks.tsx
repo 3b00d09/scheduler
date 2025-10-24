@@ -1,5 +1,5 @@
 // app/components/UrgentTasks.tsx
-import type { UrgentTask } from '../lib/types';
+import type { UrgentTask } from "../types";
 
 interface UrgentTasksProps {
   tasks: UrgentTask[];

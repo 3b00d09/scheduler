@@ -1,127 +1,72 @@
-// app/page.tsx
-'use client';
+import { Header } from "./lib/components/Header";
+import { StatsCards } from "./lib/components/StatsCard";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { generateStudyPlan } from './lib/actions';
-import { getApiKey, saveApiKey, savePlan, checkWeeklyReset } from './lib/utils';
-import { Header } from './components/Header';
-import { StatsCards } from './components/StatsCard';
-import { ApiKeyInput } from './components/ApiKeyInput';
-import { ScheduleInput } from './components/ScheduleInput';
-import { FeaturesList } from './components/FeaturesList';
+export default function Page(){
+  return(
+    <div className="grid gap-6">
+      <Header />
+      <StatsCards />
+      <ActionSelector/>
+    </div>
+  )
+}
 
-const EXAMPLE_TEXT = `My weekly nursing university schedule:
-
-CLASSES:
-- Monday: Nursing Fundamentals 9:00-12:00, Anatomy Lab 14:00-17:00
-- Tuesday: Pharmacology lecture 10:00-12:00, Clinical Skills 14:00-17:00  
-- Wednesday: Pathophysiology 9:00-11:00, Patient Care Workshop 13:00-16:00
-- Thursday: FREE DAY (no classes)
-- Friday: Community Health 9:00-12:00, then I have a project presentation at 15:00
-
-WORK (Hotel night shifts):
-- Friday 22:00 to Saturday 06:00
-- Saturday 22:00 to Sunday 06:00
-
-COMMUTE: 
-- Train ride is 45 minutes each way
-- I leave home around 7:30 AM to arrive by 8:30 AM
-
-URGENT DEADLINES:
-- Care plan assignment due Thursday 23:59
-- Pharmacology quiz next Tuesday during class
-- Clinical reflection report due in 10 days
-
-FINAL EXAMS COMING UP:
-- Anatomy: December 15
-- Pharmacology: December 18  
-- Patient Care: December 20
-
-PERSONAL NOTES:
-- I'm completely exhausted after night shifts and need good sleep
-- I wake up around 6:00 AM on class days
-- I prefer studying in the morning when I'm fresh
-- Need time for meals and family
-- Thursday is my power day since no classes!`;
-
-export default function Home() {
-  const router = useRouter();
-  const [apiKey, setApiKey] = useState('');
-  const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    checkWeeklyReset();
-    setApiKey(getApiKey());
-  }, []);
-
-  const handleApiKeyChange = (key: string) => {
-    setApiKey(key);
-    saveApiKey(key);
-  };
-
-  const handleGenerate = async () => {
-    if (!inputText.trim()) {
-      alert('Please enter your schedule information');
-      return;
-    }
-
-    if (!apiKey || !apiKey.startsWith('sk-')) {
-      alert('Please add your OpenAI API key');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const result = await generateStudyPlan(inputText, apiKey);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      savePlan(result.plan);
-      router.push('/result');
-    } catch (error: any) {
-      alert(error.message || 'Failed to generate plan');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-violet-600 flex flex-col items-center justify-center text-white">
-        <div className="w-30 h-30 rounded-full bg-white/20 flex items-center justify-center mb-8">
-          <div className="w-15 h-15 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-        </div>
-        <h2 className="text-3xl font-black mb-2.5">Creating Your Plan</h2>
-        <p className="text-base opacity-80 font-semibold">
-          AI is analyzing your schedule...
-        </p>
-      </div>
-    );
-  }
-
+ function ActionSelector() {
   return (
-    <div className="min-h-screen bg-gray-100 pb-24">
-      <div className="max-w-4xl mx-auto px-5 py-5">
-        <Header />
-        <StatsCards />
-        <ApiKeyInput value={apiKey} onChange={handleApiKeyChange} />
-        <ScheduleInput
-          value={inputText}
-          onChange={setInputText}
-          onLoadExample={() => setInputText(EXAMPLE_TEXT)}
-        />
-        <FeaturesList />
-        <button
-          onClick={handleGenerate}
-          disabled={isLoading}
-          className="w-full bg-violet-600 text-white rounded-2xl p-5 text-lg font-extrabold shadow-lg shadow-violet-600/40 hover:bg-violet-700 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-600/50 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          ✨ Create My Plan →
+    <div className="px-4 py-6 bg-secondary rounded-lg">
+      <h2 className="text-xl font-bold text-text mb-4">
+        Get Started
+      </h2>
+      
+      <div className="space-y-3">
+        <button className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl p-4 shadow-lg active:scale-98 transition-transform">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✨</span>
+            <div className="text-left flex-1">
+              <div className="font-semibold text-lg">AI Generate Plan</div>
+              <div className="text-sm">
+                Let AI create your schedule
+              </div>
+            </div>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </button>
+
+        <button className="w-full bg-text text-black rounded-2xl p-4 shadow border border-gray-200 active:scale-98 transition-transform">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✏️</span>
+            <div className="text-left flex-1">
+              <div className="font-semibold text-lg">Manual Input</div>
+              <div className="text-gray-500 text-sm">
+                Create your own schedule
+              </div>
+            </div>
+            <svg
+              className="w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
         </button>
       </div>
     </div>
