@@ -1,65 +1,83 @@
-import type { StudyPlan } from './types';
+export const getWeekDates = (weekOffset: number): Date[] => {
+  const today = new Date();
+  const currentDay = today.getDay();
+  const diff = currentDay === 0 ? -6 : 1 - currentDay;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff + weekOffset * 7);
 
-const STORAGE_KEYS = {
-  PLAN: 'studyPlan',
-  API_KEY: 'apiKey',
-  WEEK_KEY: 'weekKey',
-} as const;
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    dates.push(date);
+  }
+  return dates;
+};
 
-export const getWeekKey = (): string => {
+export const formatDate = (date: Date): number => {
+  return date.getDate();
+};
+
+export const getDateKey = (date: Date): string => {
+  return date.toISOString().split("T")[0];
+};
+
+export const getWeekRange = (dates: Date[]): string => {
+  const first = dates[0];
+  const last = dates[6];
+  const options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+  };
+  return `${first.toLocaleDateString(
+    "en-US",
+    options
+  )} - ${last.toLocaleDateString("en-US", options)}`;
+};
+
+export const getCurrentTime = (): number => {
   const now = new Date();
-  const monday = new Date(now);
-  const day = now.getDay();
-  const diff = (day === 0 ? -6 : 1) - day;
-  monday.setDate(now.getDate() + diff);
-  return `week-${monday.getFullYear()}-${monday.getMonth()}-${monday.getDate()}`;
+  return now.getHours() * 60 + now.getMinutes();
 };
 
-export const checkWeeklyReset = (): boolean => {
-  if (typeof window === 'undefined') return false;
-
-  const currentWeek = getWeekKey();
-  const savedWeek = localStorage.getItem(STORAGE_KEYS.WEEK_KEY);
-
-  if (savedWeek !== currentWeek) {
-    localStorage.setItem(STORAGE_KEYS.WEEK_KEY, currentWeek);
-    localStorage.removeItem(STORAGE_KEYS.PLAN);
-    return true;
-  }
-  return false;
+export const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
 };
 
-export const saveApiKey = (key: string): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEYS.API_KEY, key);
+export const isTaskActive = (
+  startTime: string,
+  endTime: string,
+  currentMinutes: number
+): boolean => {
+  const start = timeToMinutes(startTime);
+  const end = timeToMinutes(endTime);
+  return currentMinutes >= start && currentMinutes < end;
 };
 
-export const getApiKey = (): string => {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem(STORAGE_KEYS.API_KEY) || '';
+export const isTaskUpcoming = (
+  startTime: string,
+  currentMinutes: number
+): boolean => {
+  const start = timeToMinutes(startTime);
+  const diff = start - currentMinutes;
+  return diff > 0 && diff <= 60; // Within next 60 minutes
 };
 
-export const savePlan = (plan: StudyPlan): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEYS.PLAN, JSON.stringify(plan));
+export const formatTimeRemaining = (
+  startTime: string,
+  currentMinutes: number
+): string => {
+  const start = timeToMinutes(startTime);
+  const diff = start - currentMinutes;
+  if (diff <= 0) return "";
+  if (diff < 60) return `in ${diff}m`;
+  const hours = Math.floor(diff / 60);
+  const mins = diff % 60;
+  return mins > 0 ? `in ${hours}h ${mins}m` : `in ${hours}h`;
 };
 
-export const getPlan = (): StudyPlan | null => {
-  if (typeof window === 'undefined') return null;
-  const saved = localStorage.getItem(STORAGE_KEYS.PLAN);
-  if (!saved) return null;
-  
-  try {
-    return JSON.parse(saved) as StudyPlan;
-  } catch {
-    return null;
-  }
-};
 
-export const clearPlan = (): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(STORAGE_KEYS.PLAN);
-};
 
 export const exampleText = `My weekly nursing university schedule:
 

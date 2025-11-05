@@ -1,36 +1,28 @@
-// app/types/index.ts
-export interface UrgentTask {
+export interface Task {
+  id: string;
   title: string;
-  due: string;
-  priority: string;
+  startTime: string;
+  endTime: string;
+  details: string;
+  isUrgent: boolean;
+  isRecurring: boolean;
+  weekOffset?: number;
+  category?: string;
 }
 
-export interface Session {
-  time: string;
-  type: string;
-  title: string;
-  icon: string;
-  focus?: string;
-}
-
-export interface Day {
-  day: string;
+export interface TaskStatus {
+  taskId: string;
   date: string;
-  sessions: Session[];
+  status: "pending" | "in-progress" | "completed" | "failed";
+  failureNote?: string;
 }
 
-export interface Subject {
-  name: string;
-  hours: number;
-  color: string;
+export interface Schedule {
+  [key: string]: Task[];
 }
 
-export interface StudyPlan {
-  urgent: UrgentTask[];
-  days: Day[];
-  stats: {
-    totalHours: number;
-    subjects: Subject[];
-  };
-  tips: string[];
+export interface Category {
+  id: string;
+  label: string;
+  emoji: string;
 }
